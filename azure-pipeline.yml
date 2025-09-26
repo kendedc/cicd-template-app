@@ -31,24 +31,24 @@ pool:
 
 stages:
 - stage: Build
-  displayName: 'Build Stage'
+  displayName: "Build Stage"
   jobs:
   - job: InstallNode
-    displayName: 'Install Node Job'
+    displayName: "Install Node Job"
     steps:
     - template: install-node.yml@cicd-templates
       parameters:
         nodeVersion: ${{ parameters.nodeVersion }}
   - job: Build
-    displayName: 'Build Job'
+    displayName: "Build Job"
     dependsOn: InstallNode
     steps:
     - template: ci-steps.yml@cicd-templates
 
 - stage: Deploy
-  displayName: 'Deploy Stage'
+  displayName: "Deploy Stage"
   dependsOn: Build
-  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  condition: and(succeeded(), ne(variables["Build.Reason"], "PullRequest"))
   jobs:
     - job: Deploy
       displayName: "Deploy Job"
@@ -58,7 +58,7 @@ stages:
           inputs:
             buildType: "current"
             downloadType: "single"
-            artifactName: "drop"
+            artifactName: "$(Build.BuildId)-drop"
             downloadPath: "$(System.ArtifactsDirectory)"
 
         - task: AzureCLI@2
@@ -67,5 +67,5 @@ stages:
             scriptType: "bash"
             scriptLocation: "inlineScript"
             inlineScript: |
-              az storage blob upload-batch -d '$web' --account-name '$(storageAccount)' --source '$(System.ArtifactsDirectory)/drop/dist' --overwrite
+              az storage blob upload-batch -d "$web" --account-name "$(storageAccount)" --source "$(System.ArtifactsDirectory)/drop/dist" --overwrite
           displayName: "Deploy to Azure Storage"
