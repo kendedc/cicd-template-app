@@ -48,7 +48,7 @@ stages:
 - stage: Deploy
   displayName: "Deploy Stage"
   dependsOn: Build
-  condition: and(succeeded(), ne(variables["Build.Reason"], "PullRequest"))
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
   jobs:
     - job: Deploy
       displayName: "Deploy Job"
@@ -67,5 +67,5 @@ stages:
             scriptType: "bash"
             scriptLocation: "inlineScript"
             inlineScript: |
-              az storage blob upload-batch -d "$web" --account-name "$(storageAccount)" --source "$(System.ArtifactsDirectory)/drop/dist" --overwrite
+              az storage blob upload-batch -d "$web" --account-name "${{ parameters.storageAccount }}" --source "$(System.ArtifactsDirectory)/drop/dist" --overwrite
           displayName: "Deploy to Azure Storage"
