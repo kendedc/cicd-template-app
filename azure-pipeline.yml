@@ -18,16 +18,13 @@ resources:
 parameters:
 - name: azureSubscription
   type: string
-  default: "rgCustPortal-Service_Connection"
+  default: "sc-Ken-Test-Env-rg_de_core_dev_ea01"
 - name: storageAccount
   type: string
   default: "cicdfrontendtest"
 - name: nodeVersion
   type: string
   default: "20.x"
-- name: isRunTests
-  type: boolean
-  default: false
 
 pool:
   vmImage: ubuntu-latest
@@ -52,7 +49,6 @@ stages:
   displayName: 'Deploy Stage'
   dependsOn: Build
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-
   jobs:
     - job: Deploy
       displayName: "Deploy Job"
@@ -67,7 +63,7 @@ stages:
 
         - task: AzureCLI@2
           inputs:
-            azureSubscription: $(azureSubscription)
+            azureSubscription: ${{ parameters.azureSubscription }}
             scriptType: "bash"
             scriptLocation: "inlineScript"
             inlineScript: |

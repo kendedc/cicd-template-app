@@ -15,7 +15,7 @@ export default function AzurePipelineCustomizerWithParameters() {
       id: 0,
       name: 'azureSubscription',
       type: 'string',
-      default: 'AzureDevOps-ServiceConnection',
+      default: 'AZURE_SUBSCRIPTION_NAME',
       isFixedName: true,
     },
 
@@ -23,17 +23,16 @@ export default function AzurePipelineCustomizerWithParameters() {
       id: 1,
       name: 'storageAccount',
       type: 'string',
-      default: 'yourstorageaccount',
+      default: 'AZURE_STORAGE_ACCOUNT_NAME',
       isFixedName: true,
     },
     {
       id: 2,
       name: 'nodeVersion',
       type: 'string',
-      default: '18.x',
+      default: '20.x',
       isFixedName: true,
     },
-    { id: 3, name: 'isRunTests', type: 'boolean', default: false },
   ];
 
   const [projectName, setProjectName] = useState(PROJECT_NAME);
@@ -201,7 +200,7 @@ export default function AzurePipelineCustomizerWithParameters() {
                   <div key={p.id} className="border rounded p-2 bg-slate-50">
                     <div className="flex gap-2 items-center min-w-0">
                       <input
-                        className="flex-1 min-w-0 p-1 border rounded"
+                        className="min-w-0 p-1 border rounded"
                         value={p.name}
                         disabled={p.isFixedName}
                         onChange={(e) =>
@@ -221,7 +220,7 @@ export default function AzurePipelineCustomizerWithParameters() {
                         <option value="number">number</option>
                       </select>
                       <input
-                        className="p-1 border rounded w-28 flex-shrink-0"
+                        className="flex-1 p-1 border rounded w-28 flex-shrink-0"
                         value={String(p.default)}
                         onChange={(e) => {
                           const val =
