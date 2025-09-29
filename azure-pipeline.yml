@@ -119,7 +119,7 @@ stages:
               az storage blob upload-batch \
                 --destination '$web' \
                 --account-name '${{ parameters.storageAccount }}' \
-                --account-key $(TEMPLATE_APP_STORAGE_KEY) \
+                --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
                 --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" \
                 --auth-mode login \
                 --overwrite
