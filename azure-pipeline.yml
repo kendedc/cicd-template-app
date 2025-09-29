@@ -65,9 +65,9 @@ stages:
             echo "Listing artifact root: $(System.ArtifactsDirectory)"
             ls -la "$(System.ArtifactsDirectory)" || true
             echo "Listing artifact drop folder:"
-            ls -la "$(System.ArtifactsDirectory)/drop" || true
+            ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" || true
             echo "Listing potential publish folders inside drop:"
-            ls -la "$(System.ArtifactsDirectory)/drop/dist" || true
+            ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" || true
           displayName: 'Debug: show downloaded artifact contents'
 
         - task: AzureCLI@2
@@ -76,5 +76,5 @@ stages:
             scriptType: "bash"
             scriptLocation: "inlineScript"
             inlineScript: |
-              az storage blob upload-batch -d "$web" --account-name "${{ parameters.storageAccount }}" --source "$(System.ArtifactsDirectory)/drop/dist" --overwrite
+              az storage blob upload-batch -d "$web" --account-name "${{ parameters.storageAccount }}" --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" --overwrite
           displayName: "Deploy to Azure Storage"
