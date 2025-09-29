@@ -61,6 +61,15 @@ stages:
             artifactName: "$(Build.BuildId)-drop"
             downloadPath: "$(System.ArtifactsDirectory)"
 
+        - script: |
+            echo "Listing artifact root: $(System.ArtifactsDirectory)"
+            ls -la "$(System.ArtifactsDirectory)" || true
+            echo "Listing artifact drop folder:"
+            ls -la "$(System.ArtifactsDirectory)/drop" || true
+            echo "Listing potential publish folders inside drop:"
+            ls -la "$(System.ArtifactsDirectory)/drop/dist" || true
+          displayName: 'Debug: show downloaded artifact contents'
+
         - task: AzureCLI@2
           inputs:
             azureSubscription: ${{ parameters.azureSubscription }}
