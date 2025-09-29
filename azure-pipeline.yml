@@ -105,5 +105,6 @@ stages:
                 --destination '$web' \
                 --account-name '${{ parameters.storageAccount }}' \
                 --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" \
+                --auth-mode login \
                 --overwrite
           displayName: "Deploy to Azure Storage"
