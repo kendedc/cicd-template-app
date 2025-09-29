@@ -62,13 +62,31 @@ stages:
             downloadPath: "$(System.ArtifactsDirectory)"
 
         - script: |
-            echo "Listing artifact root: $(System.ArtifactsDirectory)"
+            echo "PWD: $(pwd)"
+            echo "Listing System.ArtifactsDirectory: $(System.ArtifactsDirectory)"
             ls -la "$(System.ArtifactsDirectory)" || true
-            echo "Listing artifact drop folder:"
+            echo "Listing $(System.ArtifactsDirectory)/drop (if present)"
+            ls -la "$(System.ArtifactsDirectory)/drop" || true
+            echo "Listing $(System.ArtifactsDirectory)/drop/dist (if present)"
+            ls -la "$(System.ArtifactsDirectory)/drop/dist" || true
+            echo "Listing $(System.ArtifactsDirectory)/drop/build (if present)"
+            ls -la "$(System.ArtifactsDirectory)/drop/build" || true
+            echo "Listing $(System.ArtifactsDirectory)/$(Build.BuildId)-drop (if present)"
             ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" || true
-            echo "Listing potential publish folders inside drop:"
+            echo "Listing $(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist (if present)"
             ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" || true
+            echo "Listing $(System.ArtifactsDirectory)/$(Build.BuildId)-drop/build (if present)"
+            ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/build" || true
           displayName: 'Debug: show downloaded artifact contents'
+
+        - script: |
+            echo "Will upload from: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop"
+            if [ ! -d "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" ]; then
+              echo "ERROR: expected folder not found: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop"
+              ls -la "$(System.ArtifactsDirectory)" || true
+              exit 1
+            fi
+          displayName: 'Verify artifact before upload'
 
         - task: AzureCLI@2
           inputs:
@@ -86,6 +104,6 @@ stages:
               az storage blob upload-batch \
                 --destination '$web' \
                 --account-name '${{ parameters.storageAccount }}' \
-                --source "$(System.ArtifactsDirectory)/drop" \
+                --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" \
                 --overwrite
           displayName: "Deploy to Azure Storage"
