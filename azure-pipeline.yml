@@ -79,6 +79,8 @@ stages:
               # debug: show folder before upload
               echo "Uploading from: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop"
               ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" || true
+              echo "Listing: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist"
+              ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" || true
 
               # upload to the special static-website container named $web
               az storage blob upload-batch \
