@@ -76,5 +76,14 @@ stages:
             scriptType: "bash"
             scriptLocation: "inlineScript"
             inlineScript: |
-              az storage blob upload-batch -d "$web" --account-name "${{ parameters.storageAccount }}" --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" --overwrite
+              # debug: show folder before upload
+              echo "Uploading from: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop"
+              ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" || true
+
+              # upload to the special static-website container named $web
+              az storage blob upload-batch \
+                --destination '$web' \
+                --account-name '${{ parameters.storageAccount }}' \
+                --source "$(System.ArtifactsDirectory)/drop" \
+                --overwrite
           displayName: "Deploy to Azure Storage"
