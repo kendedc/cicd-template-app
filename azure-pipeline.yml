@@ -62,26 +62,26 @@ stages:
             downloadPath: "$(System.ArtifactsDirectory)"
 
         - script: |
-            echo "=== Begin storageKey diagnostic ==="
+            echo "=== Begin storage key diagnostic ==="
 
             # compute length in bytes (does not reveal secret)
-            len=$(printf '%s' "$(storageKey)" | wc -c)
-            echo "storageKey length: $len"
+            len=$(printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | wc -c)
+            echo "TEMPLATE_APP_STORAGE_KEY length: $len"
 
             # try base64 decode; capture result without printing the secret
-            if printf '%s' "$(storageKey)" | base64 --decode >/dev/null 2>&1; then
+            if printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | base64 --decode >/dev/null 2>&1; then
               echo "base64 decode: OK"
             else
               echo "base64 decode: FAILED"
               # show safe prefix/suffix (first 4 and last 4 chars) to help spot quoting/prefix issues
-              prefix=$(printf '%s' "$(storageKey)" | cut -c1-4)
-              suffix=$(printf '%s' "$(storageKey)" | rev | cut -c1-4 | rev)
+              prefix=$(printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | cut -c1-4)
+              suffix=$(printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | rev | cut -c1-4 | rev)
               echo "prefix: '${prefix}'"
               echo "suffix: '${suffix}'"
             fi
 
             echo "=== End diagnostic ==="
-          displayName: 'Diagnose storageKey safely'
+          displayName: 'Diagnose storage key safely'
 
         - task: AzureCLI@2
           inputs:
