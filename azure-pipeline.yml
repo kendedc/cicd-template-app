@@ -121,6 +121,5 @@ stages:
                 --account-name '${{ parameters.storageAccount }}' \
                 --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
                 --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" \
-                --auth-mode login \
                 --overwrite
           displayName: "Deploy to Azure Storage"
