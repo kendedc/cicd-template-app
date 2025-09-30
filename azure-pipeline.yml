@@ -118,6 +118,6 @@ stages:
                 --destination '$web' \
                 --account-name '${{ parameters.storageAccount }}' \
                 --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
-                --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" \
+                --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" \
                 --overwrite
           displayName: "Deploy to Azure Storage"
