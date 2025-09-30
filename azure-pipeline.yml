@@ -19,9 +19,6 @@ variables:
 - group: 'testing template app'
 
 parameters:
-- name: azureSubscription
-  type: string
-  default: "sc-Ken-Test-Env-rg_de_core_dev_ea01"
 - name: storageAccount
   type: string
   default: "cicdfrontendtest"
@@ -53,49 +50,9 @@ stages:
   dependsOn: Build
   condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
   jobs:
-    - job: Deploy
-      displayName: "Deploy Job"
-      steps:
-        - checkout: none
-        - task: DownloadBuildArtifacts@1
-          inputs:
-            buildType: "current"
-            downloadType: "single"
-            artifactName: "$(Build.BuildId)-drop"
-            downloadPath: "$(System.ArtifactsDirectory)"
-
-        - task: AzureCLI@2
-          inputs:
-            azureSubscription: ${{ parameters.azureSubscription }}
-            scriptType: "bash"
-            scriptLocation: "inlineScript"
-            inlineScript: |
-              # If $web doesn't exist, enable static website (this will create $web)
-              has_web=$( \
-                az storage container exists \
-                  --name '$web' \
-                  --account-name '${{ parameters.storageAccount }}' \
-                  --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
-                  --query "exists" \
-                  -o tsv || echo "false" \
-              )
-              if [ "$has_web" != "true" ]; then
-                echo "'\$web' container not found. Enabling static website (creates \$web)..."
-                az storage blob service-properties update \
-                  --account-name '${{ parameters.storageAccount }}' \
-                  --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
-                  --static-website \
-                  --index-document index.html \
-                echo "Static website enabled (created \$web)."
-              else
-                echo "'\$web' container exists."
-              fi
-
-              # upload to the special static-website container named $web
-              az storage blob upload-batch \
-                --destination '$web' \
-                --account-name '${{ parameters.storageAccount }}' \
-                --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
-                --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" \
-                --overwrite
-          displayName: "Deploy to Azure Storage"
+  - job: Deploy
+    displayName: "Deploy Job"
+    steps:
+    - template: cd-steps.yml@cicd-templates
+      parameters:
+        storageAccount: ${{ parameters.storageAccount }}
