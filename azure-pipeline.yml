@@ -15,6 +15,9 @@ resources:
       ref: refs/heads/main
       endpoint: kendedc
 
+variables:
+- group: 'testing template app'
+
 parameters:
 - name: azureSubscription
   type: string
