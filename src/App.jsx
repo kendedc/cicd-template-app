@@ -13,21 +13,6 @@ export default function AzurePipelineCustomizerWithParameters() {
   const PARAMETERS = [
     {
       id: 0,
-      name: 'azureSubscription',
-      type: 'string',
-      default: 'AZURE_SUBSCRIPTION_NAME',
-      isFixedName: true,
-    },
-
-    {
-      id: 1,
-      name: 'storageAccount',
-      type: 'string',
-      default: 'AZURE_STORAGE_ACCOUNT_NAME',
-      isFixedName: true,
-    },
-    {
-      id: 2,
       name: 'nodeVersion',
       type: 'string',
       default: '20.x',
@@ -40,12 +25,6 @@ export default function AzurePipelineCustomizerWithParameters() {
   const [vmImage, setVmImage] = useState(VM_IMAGE);
   const [parameters, setParameters] = useState(PARAMETERS);
 
-  const [dotnetBuild, setDotnetBuild] = useState(true);
-  const [npmBuild, setNpmBuild] = useState(false);
-  const [dockerBuild, setDockerBuild] = useState(false);
-  const [dockerImageName, setDockerImageName] = useState('myapp:latest');
-  const [acrName, setAcrName] = useState('');
-  const [webAppName, setWebAppName] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
 
   // parameters: array of { id, name, type, default }
@@ -79,7 +58,7 @@ export default function AzurePipelineCustomizerWithParameters() {
               p.type === 'string'
                 ? `"${escapeYaml(String(p.default))}"`
                 : `${String(p.default)}`;
-            return `  - name: ${p.name}\n    type: ${p.type}\n    default: ${defVal}`;
+            return `- name: ${p.name}\n  type: ${p.type}\n  default: ${defVal}`;
           })
           .join('\n')}`
       : '';
@@ -95,10 +74,12 @@ export default function AzurePipelineCustomizerWithParameters() {
     const resourcesSection =
       'resources:\n  repositories:\n    - repository: cicd-templates\n      type: github\n      name: kendedc/test-cicd-template\n      ref: refs/heads/main\n      endpoint: kendedc';
 
+    const variableGroupSection = `variables:\n- group: ${projectName}-variable-group`;
+
     const stages = [];
 
     stages.push(
-      "- stage: Build\n  displayName: 'Build Stage'\n  jobs:\n  - job: InstallNode\n    displayName: 'Install Node Job'\n    steps:\n    - template: install-node.yml@cicd-templates\n      parameters:\n        nodeVersion: ${{ parameters.nodeVersion }}\n  - job: Build\n    displayName: 'Build Job'\n    dependsOn: InstallNode\n    steps:\n    - template: ci-steps.yml@cicd-templates"
+      "- stage: Build\n  displayName: \"Build Stage\"\n  jobs:\n  - job: InstallNode\n    displayName: \"Install Node Job\"\n    steps:\n    - template: install-node.yml@cicd-templates\n      parameters:\n        nodeVersion: ${{ parameters.nodeVersion }}\n  - job: Build\n    displayName: \"Build Job\"\n    dependsOn: InstallNode\n    steps:\n    - template: ci-steps.yml@cicd-templates\n\n- stage: Deploy\n  displayName: \"Deploy Stage\"\n  dependsOn: Build\n  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))\n  jobs:\n  - job: Deploy\n    displayName: \"Deploy Job\"\n    steps:\n    - template: cd-steps.yml@cicd-templates"
     );
 
     const stagesYaml = stages.length
@@ -109,6 +90,7 @@ export default function AzurePipelineCustomizerWithParameters() {
       `name: ${projectName}`,
       triggerSection,
       resourcesSection,
+      variableGroupSection,
       paramsBlock,
       `pool:\n  vmImage: ${vmImage}`,
       '',
@@ -123,12 +105,6 @@ export default function AzurePipelineCustomizerWithParameters() {
     triggerBranches,
     vmImage,
     parameters,
-    dotnetBuild,
-    npmBuild,
-    dockerBuild,
-    dockerImageName,
-    acrName,
-    webAppName,
   ]);
 
   const copyToClipboard = async () => {
@@ -152,7 +128,7 @@ export default function AzurePipelineCustomizerWithParameters() {
         <div className="md:col-span-1 bg-white border rounded-lg p-4 shadow-sm">
           <div className="space-y-4">
             <label className="block">
-              <div className="text-sm text-gray-600">Pipeline name</div>
+              <div className="text-sm text-gray-600">Project name</div>
               <input
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
@@ -243,73 +219,6 @@ export default function AzurePipelineCustomizerWithParameters() {
                 ))}
               </div>
             </div>
-
-            {/* <div className="flex items-center gap-3 pt-3">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={dotnetBuild}
-                  onChange={(e) => setDotnetBuild(e.target.checked)}
-                />
-                <span className="text-sm">dotnet build</span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={npmBuild}
-                  onChange={(e) => setNpmBuild(e.target.checked)}
-                />
-                <span className="text-sm">npm build</span>
-              </label>
-
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={dockerBuild}
-                  onChange={(e) => setDockerBuild(e.target.checked)}
-                />
-                <span className="text-sm">docker build & push</span>
-              </label>
-            </div> */}
-
-            {/* {dockerBuild && (
-              <>
-                <label className="block">
-                  <div className="text-sm text-gray-600">
-                    Docker image name (repo:tag)
-                  </div>
-                  <input
-                    value={dockerImageName}
-                    onChange={(e) => setDockerImageName(e.target.value)}
-                    className="mt-1 block w-full border rounded px-2 py-1"
-                  />
-                </label>
-
-                <label className="block">
-                  <div className="text-sm text-gray-600">
-                    ACR name (optional)
-                  </div>
-                  <input
-                    value={acrName}
-                    onChange={(e) => setAcrName(e.target.value)}
-                    className="mt-1 block w-full border rounded px-2 py-1"
-                  />
-                </label>
-              </>
-            )} */}
-
-            {/* <label className="block">
-              <div className="text-sm text-gray-600">
-                Azure Web App name (optional - for simple deploy task)
-              </div>
-              <input
-                value={webAppName}
-                onChange={(e) => setWebAppName(e.target.value)}
-                className="mt-1 block w-full border rounded px-2 py-1"
-              />
-            </label> */}
-
             <div>
               <button
                 onClick={() => {
@@ -317,12 +226,6 @@ export default function AzurePipelineCustomizerWithParameters() {
                   setTriggerBranches(TRIGGER_BRANCHES);
                   setVmImage(VM_IMAGE);
                   setParameters(PARAMETERS);
-                  setDotnetBuild(true);
-                  setNpmBuild(false);
-                  setDockerBuild(false);
-                  setDockerImageName('myapp:${{ Build.BuildId }}');
-                  setAcrName('');
-                  setWebAppName('');
                 }}
                 className="px-3 py-1 rounded bg-gray-100 border"
               >

@@ -19,9 +19,6 @@ variables:
 - group: 'testing template app'
 
 parameters:
-- name: storageAccount
-  type: string
-  default: "cicdfrontendtest"
 - name: nodeVersion
   type: string
   default: "20.x"
