@@ -64,50 +64,28 @@ stages:
             artifactName: "$(Build.BuildId)-drop"
             downloadPath: "$(System.ArtifactsDirectory)"
 
-        - script: |
-            echo "=== Begin storage key diagnostic ==="
-
-            # compute length in bytes (does not reveal secret)
-            len=$(printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | wc -c)
-            echo "TEMPLATE_APP_STORAGE_KEY length: $len"
-
-            # try base64 decode; capture result without printing the secret
-            if printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | base64 --decode >/dev/null 2>&1; then
-              echo "base64 decode: OK"
-            else
-              echo "base64 decode: FAILED"
-              # show safe prefix/suffix (first 4 and last 4 chars) to help spot quoting/prefix issues
-              prefix=$(printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | cut -c1-4)
-              suffix=$(printf '%s' "$(TEMPLATE_APP_STORAGE_KEY)" | rev | cut -c1-4 | rev)
-              echo "prefix: '${prefix}'"
-              echo "suffix: '${suffix}'"
-            fi
-
-            echo "=== End diagnostic ==="
-          displayName: 'Diagnose storage key safely'
-
         - task: AzureCLI@2
           inputs:
             azureSubscription: ${{ parameters.azureSubscription }}
             scriptType: "bash"
             scriptLocation: "inlineScript"
             inlineScript: |
-              # debug: show folder before upload
-              echo "Uploading from: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop"
-              ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop" || true
-              echo "Listing: $(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist"
-              ls -la "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" || true
-
               # If $web doesn't exist, enable static website (this will create $web)
-              has_web=$(az storage container exists --name '$web' --account-name '${{ parameters.storageAccount }}' --auth-mode login --query "exists" -o tsv || echo "false")
+              has_web=$( \
+                az storage container exists \
+                  --name '$web' \
+                  --account-name '${{ parameters.storageAccount }}' \
+                  --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
+                  --query "exists" \
+                  -o tsv || echo "false" \
+              )
               if [ "$has_web" != "true" ]; then
                 echo "'\$web' container not found. Enabling static website (creates \$web)..."
                 az storage blob service-properties update \
                   --account-name '${{ parameters.storageAccount }}' \
+                  --account-key '$(TEMPLATE_APP_STORAGE_KEY)' \
                   --static-website \
                   --index-document index.html \
-                  --404-document 404.html \
-                  --auth-mode login
                 echo "Static website enabled (created \$web)."
               else
                 echo "'\$web' container exists."
