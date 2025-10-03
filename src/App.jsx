@@ -26,6 +26,8 @@ export default function AzurePipelineCustomizerWithParameters() {
   const [parameters, setParameters] = useState(PARAMETERS);
 
   const [copyStatus, setCopyStatus] = useState('');
+  // Toggle for including testing pipeline
+  const [includeTestPipeline, setIncludeTestPipeline] = useState(true);
 
   // parameters: array of { id, name, type, default }
 
@@ -77,10 +79,44 @@ export default function AzurePipelineCustomizerWithParameters() {
     const variableGroupSection = `variables:\n- group: ${projectName}-variable-group`;
 
     const stages = [];
+    // Always include Build and Deploy stages
+    let buildStage =
+      '- stage: Build\n' +
+      '  displayName: "Build Stage"\n' +
+      '  jobs:\n' +
+      '  - job: InstallNode\n' +
+      '    displayName: "Install Node Job"\n' +
+      '    steps:\n' +
+      '    - template: install-node.yml@cicd-templates\n' +
+      '      parameters:\n' +
+      '        nodeVersion: ${{ parameters.nodeVersion }}';
+    if (includeTestPipeline) {
+      buildStage +=
+        '\n  - job: Test\n' +
+        '    displayName: "Test Job"\n' +
+        '    dependsOn: InstallNode\n' +
+        '    steps:\n' +
+        '    - template: test-steps.yml@cicd-templates\n';
+    }
+    buildStage += 
+      '\n  - job: Build\n' +
+      '    displayName: "Build Job"\n' +
+      `    dependsOn: ${includeTestPipeline ? 'Test' : 'InstallNode'}\n` +
+      '    steps:\n' +
+      '    - template: ci-steps.yml@cicd-templates';
 
-    stages.push(
-      "- stage: Build\n  displayName: \"Build Stage\"\n  jobs:\n  - job: InstallNode\n    displayName: \"Install Node Job\"\n    steps:\n    - template: install-node.yml@cicd-templates\n      parameters:\n        nodeVersion: ${{ parameters.nodeVersion }}\n  - job: Build\n    displayName: \"Build Job\"\n    dependsOn: InstallNode\n    steps:\n    - template: ci-steps.yml@cicd-templates\n\n- stage: Deploy\n  displayName: \"Deploy Stage\"\n  dependsOn: Build\n  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))\n  jobs:\n  - job: Deploy\n    displayName: \"Deploy Job\"\n    steps:\n    - template: cd-steps.yml@cicd-templates"
-    );
+    const deployStage =
+      '\n\n- stage: Deploy\n' +
+      '  displayName: "Deploy Stage"\n' +
+      '  dependsOn: Build\n' +
+      "  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))\n" +
+      '  jobs:\n' +
+      '  - job: Deploy\n' +
+      '    displayName: "Deploy Job"\n' +
+      '    steps:\n' +
+      '    - template: cd-steps.yml@cicd-templates';
+
+    stages.push(buildStage + deployStage);
 
     const stagesYaml = stages.length
       ? `stages:\n${stages.join('\n')}`
@@ -100,12 +136,7 @@ export default function AzurePipelineCustomizerWithParameters() {
       .join('\n\n');
 
     return yamlParts;
-  }, [
-    projectName,
-    triggerBranches,
-    vmImage,
-    parameters,
-  ]);
+  }, [projectName, triggerBranches, vmImage, parameters, includeTestPipeline]);
 
   const copyToClipboard = async () => {
     try {
@@ -217,6 +248,19 @@ export default function AzurePipelineCustomizerWithParameters() {
                     </div>
                   </div>
                 ))}
+              </div>
+              {/* Toggle for including test pipeline */}
+              <div className="flex items-center mt-4">
+                <input
+                  id="include-test-pipeline"
+                  type="checkbox"
+                  checked={includeTestPipeline}
+                  onChange={(e) => setIncludeTestPipeline(e.target.checked)}
+                  className="mr-2"
+                />
+                <label htmlFor="include-test-pipeline" className="text-sm">
+                  Include testing pipeline (unit tests)
+                </label>
               </div>
             </div>
             <div>

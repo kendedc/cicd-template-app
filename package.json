@@ -8,7 +8,8 @@
     "build": "vite build",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npx jest src/App.test.jsx"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
