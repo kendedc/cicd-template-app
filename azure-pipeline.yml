@@ -39,7 +39,8 @@ stages:
   - job: Test
     displayName: "Test Job"
     dependsOn: InstallNode
-    steps: test-steps.yml@cicd-templates
+    steps:
+    - template: test-steps.yml@cicd-templates
   - job: Build
     displayName: "Build Job"
     dependsOn: Test
