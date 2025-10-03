@@ -36,9 +36,13 @@ stages:
     - template: install-node.yml@cicd-templates
       parameters:
         nodeVersion: ${{ parameters.nodeVersion }}
+  - job: Test
+    displayName: "Test Job"
+    dependsOn: InstallNode
+    steps: test-steps.yml@cicd-templates
   - job: Build
     displayName: "Build Job"
-    dependsOn: InstallNode
+    dependsOn: Test
     steps:
     - template: ci-steps.yml@cicd-templates
 
