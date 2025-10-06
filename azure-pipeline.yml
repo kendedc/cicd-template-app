@@ -38,7 +38,7 @@ stages:
         nodeVersion: ${{ parameters.nodeVersion }}
   - job: Build
     displayName: "Build Job"
-    dependsOn: Test
+    dependsOn: InstallNode
     steps:
     - template: ci-steps.yml@cicd-templates
 
