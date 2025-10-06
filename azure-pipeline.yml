@@ -44,6 +44,8 @@ stages:
     dependsOn: InstallNode
     steps:
     - template: ci-steps.yml@cicd-templates
+      parameters:
+        isTest: ${{ parameters.isTest }}
 
 - stage: Deploy
   displayName: "Deploy Stage"

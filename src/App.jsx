@@ -122,10 +122,13 @@ export default function AzurePipelineCustomizerWithParameters() {
       '    displayName: "Build Job"\n' +
       `    dependsOn: InstallNode\n` +
       '    steps:\n' +
-      '    - template: ci-steps.yml@cicd-templates';
+      '    - template: ci-steps.yml@cicd-templates\n' +
+      '      parameters:\n' +
+      `        isTest: ${includeTestPipeline}`;
+
 
     const deployStage =
-      '\n\n- stage: Deploy\n' +
+      '\n- stage: Deploy\n' +
       '  displayName: "Deploy Stage"\n' +
       '  dependsOn: Build\n' +
       "  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))\n" +
