@@ -46,6 +46,7 @@ stages:
     - template: ci-steps.yml@cicd-templates
       parameters:
         isTest: ${{ parameters.isTest }}
+        nodeVersion: ${{ parameters.nodeVersion }}
 
 - stage: Deploy
   displayName: "Deploy Stage"
