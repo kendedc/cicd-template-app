@@ -22,6 +22,9 @@ parameters:
 - name: nodeVersion
   type: string
   default: "20.x"
+- name: isTest
+  type: boolean
+  default: true
 
 pool:
   vmImage: ubuntu-latest
