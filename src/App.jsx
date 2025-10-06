@@ -27,17 +27,22 @@ export default function AzurePipelineCustomizerWithParameters() {
 
   const [copyStatus, setCopyStatus] = useState('');
   // Toggle for including testing pipeline
-  const [includeTestPipeline, setIncludeTestPipeline] = useState(true);
+  const [includeTestPipeline, setIncludeTestPipeline] = useState(false);
 
   // parameters: array of { id, name, type, default }
 
-  const addParameter = () => {
+  const addParameter = (param = {}) => {
     const nextId = parameters.length
       ? Math.max(...parameters.map((p) => p.id)) + 1
       : 1;
     setParameters([
       ...parameters,
-      { id: nextId, name: `param${nextId}`, type: 'string', default: '' },
+      {
+        id: param.id ?? nextId,
+        name: param.name ?? `param${nextId}`,
+        type: param.type ?? 'string',
+        default: param.value ?? '',
+      },
     ]);
   };
 
@@ -49,6 +54,20 @@ export default function AzurePipelineCustomizerWithParameters() {
 
   const removeParameter = (id) => {
     setParameters(parameters.filter((p) => p.id !== id));
+  };
+
+  const updateTestPipeline = (value) => {
+    setIncludeTestPipeline(value);
+    if (value) {
+      addParameter({
+        id: -99,
+        name: 'isTest',
+        type: 'boolean',
+        value: true,
+      });
+    } else {
+      removeParameter(-99);
+    }
   };
 
   const generatedYaml = useMemo(() => {
@@ -90,18 +109,18 @@ export default function AzurePipelineCustomizerWithParameters() {
       '    - template: install-node.yml@cicd-templates\n' +
       '      parameters:\n' +
       '        nodeVersion: ${{ parameters.nodeVersion }}';
-    if (includeTestPipeline) {
-      buildStage +=
-        '\n  - job: Test\n' +
-        '    displayName: "Test Job"\n' +
-        '    dependsOn: InstallNode\n' +
-        '    steps:\n' +
-        '    - template: test-steps.yml@cicd-templates\n';
-    }
-    buildStage += 
+    // if (includeTestPipeline) {
+    //   buildStage +=
+    //     '\n  - job: Test\n' +
+    //     '    displayName: "Test Job"\n' +
+    //     '    dependsOn: InstallNode\n' +
+    //     '    steps:\n' +
+    //     '    - template: test-steps.yml@cicd-templates';
+    // }
+    buildStage +=
       '\n  - job: Build\n' +
       '    displayName: "Build Job"\n' +
-      `    dependsOn: ${includeTestPipeline ? 'Test' : 'InstallNode'}\n` +
+      `    dependsOn: InstallNode\n` +
       '    steps:\n' +
       '    - template: ci-steps.yml@cicd-templates';
 
@@ -193,6 +212,25 @@ export default function AzurePipelineCustomizerWithParameters() {
 
             <div className="pt-2">
               <div className="flex items-center justify-between mb-2">
+                <div className="text-sm text-gray-600">Unit Test</div>
+              </div>
+
+              <div className="flex items-center mt-4">
+                <input
+                  id="include-test-pipeline"
+                  type="checkbox"
+                  checked={includeTestPipeline}
+                  onChange={(e) => updateTestPipeline(e.target.checked)}
+                  className="mr-2"
+                />
+                <label htmlFor="include-test-pipeline" className="text-sm">
+                  Include unit test
+                </label>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <div className="flex items-center justify-between mb-2">
                 <div className="text-sm font-medium">Parameters</div>
                 <button
                   onClick={addParameter}
@@ -249,20 +287,8 @@ export default function AzurePipelineCustomizerWithParameters() {
                   </div>
                 ))}
               </div>
-              {/* Toggle for including test pipeline */}
-              <div className="flex items-center mt-4">
-                <input
-                  id="include-test-pipeline"
-                  type="checkbox"
-                  checked={includeTestPipeline}
-                  onChange={(e) => setIncludeTestPipeline(e.target.checked)}
-                  className="mr-2"
-                />
-                <label htmlFor="include-test-pipeline" className="text-sm">
-                  Include testing pipeline (unit tests)
-                </label>
-              </div>
             </div>
+
             <div>
               <button
                 onClick={() => {
