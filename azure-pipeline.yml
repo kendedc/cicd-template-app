@@ -39,6 +39,7 @@ stages:
     - template: install-node.yml@cicd-templates
       parameters:
         nodeVersion: ${{ parameters.nodeVersion }}
+
   - job: Build
     displayName: "Build Job"
     dependsOn: InstallNode
@@ -47,6 +48,12 @@ stages:
       parameters:
         isTest: ${{ parameters.isTest }}
         nodeVersion: ${{ parameters.nodeVersion }}
+        preBuildSteps: |
+          echo "This is a pre-build custom step"
+          echo "You can add any steps here that you want to run before the build"
+          echo "NODE_ENV=production" > .env
+          echo "Environment Variables in .env file:"
+          cat .env
 
 - stage: Deploy
   displayName: "Deploy Stage"
