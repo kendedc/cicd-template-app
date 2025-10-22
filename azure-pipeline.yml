@@ -55,6 +55,10 @@ stages:
               echo "NODE_ENV=production" > .env
               echo "Environment Variables in .env file:"
               cat .env
+            displayName: "Custom Pre-Build Steps"
+          - script: |
+              yarn lint
+            displayName: "Run Linter"
 
 - stage: Deploy
   displayName: "Deploy Stage"
