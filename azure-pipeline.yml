@@ -81,5 +81,5 @@ stages:
         preDeploySteps:
           - script: |
               echo "This is a post deploy custom step"
-              cat .env
+              ls -la dist || true
             displayName: "Custom Post-Deploy Step"
