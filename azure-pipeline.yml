@@ -77,3 +77,9 @@ stages:
     displayName: "Deploy Job"
     steps:
     - template: cd-steps.yml@cicd-templates
+      parameters:
+        preDeploySteps:
+          - script: |
+              echo "This is a post deploy custom step"
+              cat .env
+            displayName: "Custom Post-Deploy Step"
