@@ -59,6 +59,14 @@ stages:
           - script: |
               yarn lint
             displayName: "Run Linter"
+        postBuildSteps:
+          - task: Bash@3
+            displayName: 'Debug list dist'
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "List dist"
+                ls -la dist || true
 
 - stage: Deploy
   displayName: "Deploy Stage"
