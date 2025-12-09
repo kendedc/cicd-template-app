@@ -76,7 +76,7 @@ stages:
   - job: Deploy
     displayName: "Deploy Job"
     steps:
-    - template: build-static-web.yml@cicd-templates
+    - template: deploy-static-web.yml@cicd-templates
       parameters:
         preDeploySteps:
           - script: |
