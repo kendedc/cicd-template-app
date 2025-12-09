@@ -44,7 +44,7 @@ stages:
     displayName: "Build Job"
     dependsOn: InstallNode
     steps:
-    - template: ci-steps.yml@cicd-templates
+    - template: build-node.yml@cicd-templates
       parameters:
         isTest: ${{ parameters.isTest }}
         nodeVersion: ${{ parameters.nodeVersion }}
@@ -76,7 +76,7 @@ stages:
   - job: Deploy
     displayName: "Deploy Job"
     steps:
-    - template: cd-steps.yml@cicd-templates
+    - template: build-static-web.yml@cicd-templates
       parameters:
         preDeploySteps:
           - script: |
