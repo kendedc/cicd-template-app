@@ -35,16 +35,8 @@ stages:
 - stage: Build
   displayName: "Build Stage"
   jobs:
-  - job: InstallNode
-    displayName: "Install Node Job"
-    steps:
-    - template: install-node.yml@cicd-templates
-      parameters:
-        nodeVersion: ${{ parameters.nodeVersion }}
-
   - job: Build
     displayName: "Build Job"
-    dependsOn: InstallNode
     steps:
     - template: build-node.yml@cicd-templates
       parameters:
