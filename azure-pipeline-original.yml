@@ -1,0 +1,128 @@
+name: project-name
+
+trigger:
+  branches:
+    include:
+      - main
+      - development
+      - staging
+
+resources:
+  repositories:
+    - repository: cicd-templates
+      type: github
+      name: kendedc/test-cicd-template
+      ref: refs/heads/main
+      endpoint: kendedc
+
+variables:
+- group: 'testing template app'
+
+parameters:
+- name: nodeVersion
+  type: string
+  default: "20.x"
+- name: isTest
+  type: boolean
+  default: true
+
+pool:
+  name: Default
+  demands:
+    - Agent.Name -equals lazudautotest01
+
+stages:
+- stage: Build
+  displayName: "Build Stage"
+  jobs:
+  - job: Build
+    displayName: "Build Job"
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '${{ parameters.nodeVersion }}'
+      displayName: "Use Node.js ${{ parameters.nodeVersion }}"
+
+    - script: |
+        echo "Running frozen install"
+        echo "" >> $(Build.SourcesDirectory)/.npmrc || true
+
+        yarn install --frozen-lockfile --cache-folder $(Pipeline.Workspace)/.yarn_cache
+      displayName: "Install dependencies"
+
+    - script: |
+        echo "Running unit tests"
+        yarn test
+      displayName: "Run unit tests"
+      condition: eq('${{ parameters.isTest }}', 'true')
+
+    - script: |
+        echo "Running build"
+        yarn ${{ parameters.buildScript }}
+      displayName: "Build project"
+
+    - task: CopyFiles@2
+      displayName: 'Copy build output to staging directory'
+      inputs:
+        contents: 'dist/**'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: '$(Build.BuildId)-drop'
+        publishLocation: 'Container'
+
+- stage: Deploy
+  displayName: "Deploy Stage"
+  dependsOn: Build
+  condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+  jobs:
+  - job: Deploy
+    displayName: "Deploy Job"
+    steps:
+    - checkout: none
+    - task: DownloadBuildArtifacts@1
+      inputs:
+        buildType: "current"
+        downloadType: "single"
+        artifactName: "$(Build.BuildId)-drop"
+        downloadPath: "$(System.ArtifactsDirectory)"
+      displayName: "Download Build Artifacts"
+
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: $(AZURE_SUBSCRIPTION)
+        scriptType: "bash"
+        scriptLocation: "inlineScript"
+        inlineScript: |
+          # If $web doesn't exist, enable static website and create $web container
+          has_web=$( \
+            az storage container exists \
+              --name '$web' \
+              --account-name '$(STORAGE_ACCOUNT)' \
+              --account-key '$(STORAGE_KEY)' \
+              --query "exists" \
+              -o tsv || echo "false" \
+          )
+          if [ "$has_web" != "true" ]; then
+            echo "'\$web' container not found. Enabling static website (creates \$web)..."
+            az storage blob service-properties update \
+              --account-name '$(STORAGE_ACCOUNT)' \
+              --account-key '$(STORAGE_KEY)' \
+              --static-website \
+              --index-document index.html \
+            echo "Static website enabled (created \$web)."
+          else
+            echo "'\$web' container exists."
+          fi
+
+          # upload to the special static-website container named $web
+          az storage blob upload-batch \
+            --destination '$web' \
+            --account-name '$(STORAGE_ACCOUNT)' \
+            --account-key '$(STORAGE_KEY)' \
+            --source "$(System.ArtifactsDirectory)/$(Build.BuildId)-drop/dist" \
+            --overwrite
+      displayName: "Deploy to Azure Storage"

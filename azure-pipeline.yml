@@ -42,25 +42,6 @@ stages:
       parameters:
         isTest: ${{ parameters.isTest }}
         nodeVersion: ${{ parameters.nodeVersion }}
-        preBuildSteps:
-          - script: |
-              echo "This is a pre-build custom step"
-              echo "You can add any steps here that you want to run before the build"
-              echo "NODE_ENV=production" > .env
-              echo "Environment Variables in .env file:"
-              cat .env
-            displayName: "Custom Pre-Build Steps"
-          - script: |
-              yarn lint
-            displayName: "Run Linter"
-        postBuildSteps:
-          - task: Bash@3
-            displayName: 'Debug list dist'
-            inputs:
-              targetType: 'inline'
-              script: |
-                echo "List dist"
-                ls -la dist || true
 
 - stage: Deploy
   displayName: "Deploy Stage"
@@ -71,9 +52,3 @@ stages:
     displayName: "Deploy Job"
     steps:
     - template: deploy-static-web.yml@cicd-templates
-      parameters:
-        preDeploySteps:
-          - script: |
-              echo "This is a post deploy custom step"
-              ls -la dist || true
-            displayName: "Custom Post-Deploy Step"
