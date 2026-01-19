@@ -42,6 +42,8 @@ stages:
       parameters:
         isTest: ${{ parameters.isTest }}
         nodeVersion: ${{ parameters.nodeVersion }}
+        preBuildSteps: []
+        postBuildSteps: []
 
 - stage: Deploy
   displayName: "Deploy Stage"
@@ -52,3 +54,13 @@ stages:
     displayName: "Deploy Job"
     steps:
     - template: deploy-static-web.yml@cicd-templates
+      parameters:
+        preDeploySteps:
+          - script: |
+              echo "Starting deployment..."
+              echo "Deploying to storage account: $(STORAGE_ACCOUNT)"
+            displayName: "Pre-deploy step"
+        postDeploySteps: 
+          - script: |
+              echo "Deployment completed."
+            displayName: "Post-deploy step"
